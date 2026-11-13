@@ -1,0 +1,25 @@
+name: Test
+
+# Audits the cask and installs it from this checkout, on every push and after each bump.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: macos-latest
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - name: Tap this checkout
+        run: |
+          taps="$(brew --repository)/Library/Taps/robinchoice"
+          mkdir -p "$taps"
+          rm -rf "$taps/homebrew-tap"
+          ln -s "$GITHUB_WORKSPACE" "$taps/homebrew-tap"
+      - run: brew audit --cask --online --strict robinchoice/tap/savor
+      - run: brew install --cask robinchoice/tap/savor
+      - run: test -d /Applications/Savor.app && codesign --verify --deep --strict /Applications/Savor.app && spctl --assess --type execute /Applications/Savor.app
+      - run: brew uninstall --cask robinchoice/tap/savor

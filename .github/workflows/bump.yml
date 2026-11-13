@@ -1,0 +1,47 @@
+name: Bump
+
+# Moves the cask to Savor's latest release. It polls instead of being pushed to, so no token beyond the
+# workflow's own is needed, and it downloads nothing: the release assets carry their SHA-256. A push with
+# the workflow's token starts no other workflow, so it starts the test itself.
+on:
+  schedule:
+    - cron: '17 */2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency: bump
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Update the cask
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          release=$(gh api repos/robinchoice/savor/releases/latest)
+          version=$(jq -r '.tag_name | ltrimstr("v")' <<<"$release")
+          current=$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/savor.rb)
+          if [ "$version" = "$current" ]; then exit 0; fi
+          digest() { jq -r --arg name "$1" '.assets[] | select(.name == $name) | .digest // "" | ltrimstr("sha256:")' <<<"$release"; }
+          arm=$(digest "Savor-$version-arm64.dmg")
+          intel=$(digest "Savor-$version-x64.dmg")
+          if ! [[ $arm =~ ^[0-9a-f]{64}$ && $intel =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::Savor $version has no SHA-256 for both dmg files"
+            exit 1
+          fi
+          sed -i \
+            -e "s/^  version \".*\"$/  version \"$version\"/" \
+            -e "s/^  sha256 arm:   \".*\",$/  sha256 arm:   \"$arm\",/" \
+            -e "s/^         intel: \".*\"$/         intel: \"$intel\"/" \
+            Casks/savor.rb
+          git diff --stat
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -qam "savor $version"
+          git push
+          gh workflow run test.yml
