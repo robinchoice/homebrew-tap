@@ -7,7 +7,7 @@
 
 ## Checks
 
-`test.yml` audits the cask (`brew audit --cask --online --strict`), installs it on macOS and checks the app's signature and notarization. There is no local check without a Mac.
+`test.yml` installs the cask from `main` the way users do, checks the app's signature and notarization and audits the cask (`brew audit --cask --online --strict`, which needs `brew trust robinchoice/tap` first). There is no local check without a Mac.
 
 ## Deploy
 

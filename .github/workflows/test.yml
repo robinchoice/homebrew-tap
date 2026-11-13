@@ -1,9 +1,10 @@
 name: Test
 
-# Audits the cask and installs it from this checkout, on every push and after each bump.
+# Installs the cask from main the way users do, then checks the app's signature and audits the cask.
+# Runs on every push to main and after each bump.
 on:
   push:
-  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -12,14 +13,7 @@ jobs:
     env:
       HOMEBREW_NO_AUTO_UPDATE: '1'
     steps:
-      - uses: actions/checkout@v7
-      - name: Tap this checkout
-        run: |
-          taps="$(brew --repository)/Library/Taps/robinchoice"
-          mkdir -p "$taps"
-          rm -rf "$taps/homebrew-tap"
-          ln -s "$GITHUB_WORKSPACE" "$taps/homebrew-tap"
-      - run: brew audit --cask --online --strict robinchoice/tap/savor
       - run: brew install --cask robinchoice/tap/savor
-      - run: test -d /Applications/Savor.app && codesign --verify --deep --strict /Applications/Savor.app && spctl --assess --type execute /Applications/Savor.app
+      - run: codesign --verify --deep --strict /Applications/Savor.app && spctl --assess --type execute /Applications/Savor.app
+      - run: brew trust robinchoice/tap && brew audit --cask --online --strict robinchoice/tap/savor
       - run: brew uninstall --cask robinchoice/tap/savor
