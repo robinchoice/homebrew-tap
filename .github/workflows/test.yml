@@ -12,6 +12,7 @@ jobs:
     runs-on: macos-latest
     env:
       HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}
     steps:
       - run: brew install --cask robinchoice/tap/savor
       - run: codesign --verify --deep --strict /Applications/Savor.app && spctl --assess --type execute /Applications/Savor.app
