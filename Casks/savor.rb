@@ -1,9 +1,9 @@
 cask "savor" do
   arch arm: "arm64", intel: "x64"
 
-  version "0.6.48"
-  sha256 arm:   "101c444614623e7d36c19a97cad1863736d5af5c204f7d6ac8f8dd7d7d49785e",
-         intel: "c15a102aa52899d84dc8ab53ec6b52a729253e75a8e2e1853998e8461c204c2b"
+  version "0.6.49"
+  sha256 arm:   "6573e0b490d7e689c18c7c2295f165a98bfef48152f7c404addbcb4587ddef57",
+         intel: "ab92a6b8cc7d1720be8ca3c2dfc76a316f17caec463092b211f0fb6e121ba962"
 
   url "https://github.com/robinchoice/savor/releases/download/v#{version}/Savor-#{version}-#{arch}.dmg",
       verified: "github.com/robinchoice/savor/"
